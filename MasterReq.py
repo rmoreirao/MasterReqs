@@ -62,38 +62,73 @@ class LinkedList(object):
         curr = self.head
         str = ''
         while curr:
-            str = "{} [{},{}]".format(str,curr.get_node_data().get_key(),curr.get_node_data().get_count())
+            str = "{} [{}, {}]".format(str,curr.get_node_data().get_key(),curr.get_node_data().get_count())
             curr = curr.next
             if curr:
                 str = '{} ->'.format(str)
         return str
 
-articles_sample_data = {1:'asdnjsadlkjfalkjdsflkjahsdlhflasdhfasdf',
-            2:'slkdjflskjdflsjdflsdf',
-            3:'sdçlfsljdflksjdfkjdlsjldkfjslkdjf'}
+# articles_sample_data = {1:'asdnjsadlkjfalkjdsflkjahsdlhflasdhfasdf',
+#             2:'slkdjflskjdflsjdflsdf',
+#             3:'sdçlfsljdflksjdfkjdlsjldkfjslkdjf'}
+#
+# def read_articles_sample_data():
+#     articles_hash = {}
+#     for key, phrase in articles_sample_data.items():
+#         for letter in phrase:
+#             letter_list = articles_hash.get(key,[])
+#             letter_list.append(letter)
+#             articles_hash[key] = letter_list
+#
+#     return articles_hash
+#
+# articles_words_hash = {}
+#
+# for key,words in read_articles_sample_data().items():
+#     for word in words:
+#         letter_list = articles_words_hash.get(word, LinkedList())
+#         node_data = letter_list.find_node_data(key)
+#         if node_data:
+#             node_data.increment_count()
+#         else:
+#             letter_list.append(NodeData(key, 1))
+#
+#         articles_words_hash[word] = letter_list
+#
+# for key,value in articles_words_hash.items():
+#     print('[{}] ->{}'.format(key,value))
 
-def read_articles_sample_data():
-    articles_hash = {}
-    for key, phrase in articles_sample_data.items():
-        for letter in phrase:
-            letter_list = articles_hash.get(key,[])
-            letter_list.append(letter)
-            articles_hash[key] = letter_list
+import re
 
-    return articles_hash
+
+
+def remove_xml_tags(text):
+    return re.sub('<[^<]+>', "")
 
 articles_words_hash = {}
+current_doc = 0
 
-for key,words in read_articles_sample_data().items():
-    for word in words:
-        letter_list = articles_words_hash.get(word, LinkedList())
-        node_data = letter_list.find_node_data(key)
-        if node_data:
-            node_data.increment_count()
+with open("txt-for-assignment-data-science.txt") as f:
+    for line in f.readlines():
+        #clean the line
+        line = line.replace('&amp;','').strip()
+        # line.startswith('<') and line.endswith('>')
+        if re.match('<[^<]+>',line):
+            if line.startswith('<doc>'):
+                current_doc += 1
         else:
-            letter_list.append(NodeData(key, 1))
+            words = line.lower().strip().split(' ')
+            for word in words:
+                word = re.sub('[^A-Za-z0-9]+', '', word)
+                if word:
+                    words_list = articles_words_hash.get(word, LinkedList())
+                    node_data = words_list.find_node_data(current_doc)
+                    if node_data:
+                        node_data.increment_count()
+                    else:
+                        words_list.append(NodeData(current_doc, 1))
 
-        articles_words_hash[word] = letter_list
+                    articles_words_hash[word] = words_list
 
 for key,value in articles_words_hash.items():
     print('[{}] ->{}'.format(key,value))
